@@ -1,0 +1,19 @@
+[project]
+name = "devops-metrics-agent"
+version = "0.1.0"
+description = "A Multi-Agent System for calculating GitHub DevOps metrics using Google ADK."
+authors = [
+    {name = "Manikandan Sukumaran", email = "manikandan.sukumaran@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10" # Specify the minimum Python version
+
+dependencies = [
+    "google-adk>=1.18.0",
+    "google-genai>=1.51.0",
+    "pydantic>=2.12.4",
+    "python-dotenv>=1.2.1",
+    "requests>=2.32.5",
+    "sqlite-utils>=3.38",
+    "uvicorn>=0.38.0",
+]
