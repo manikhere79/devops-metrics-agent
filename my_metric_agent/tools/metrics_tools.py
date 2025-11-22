@@ -48,9 +48,12 @@ metric_calculator_agent = LlmAgent(
        - Cycle time: Time from PR creation to merge (in days or hours)
        - PR review time: Time from PR creation to first review (in days or hours)
        - Average metrics: Calculate mean, median, or other statistics as requested
+       - When asked for "average" without specifying mean/median, use mean (arithmetic average)
     6. Parse dates using datetime and calculate time differences accurately.
     7. Handle missing or null values gracefully.
-    8. After the code executes, explain the result clearly to the user.
+    8. For PR review time: Calculate time difference between 'created_at' and 'first_review_at'
+    9. When calculating averages across multiple PRs, show both the individual values and the average
+    10. After the code executes, explain the result clearly to the user with units (hours/days).
     
     The user's input will contain both their question and the JSON data to analyze.
     """,

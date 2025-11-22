@@ -133,7 +133,8 @@ def fetch_pr_data(
     repo_name: str,
     auth_memory_tool: AuthMemoryTool,
     user_id: str = "user1",
-    per_page: int = 10
+    per_page: int = 10,
+    state: str = "all"
 ) -> Dict[str, Any]:
     """
     Fetch Pull Request data from GitHub API for a given repository.
@@ -147,6 +148,7 @@ def fetch_pr_data(
         auth_memory_tool: AuthMemoryTool instance for persistent storage
         user_id: User identifier (default: "user1")
         per_page: Number of PRs to fetch (default: 10)
+        state: PR state filter - "open", "closed", or "all" (default: "all")
     
     Returns:
         Dictionary with status and PR data (JSON string)
@@ -171,7 +173,7 @@ def fetch_pr_data(
         # Fetch PR data from GitHub API
         url = f"https://api.github.com/repos/{repo_name}/pulls"
         params = {
-            "state": "closed",
+            "state": state,
             "per_page": per_page,
             "sort": "updated",
             "direction": "desc"
@@ -265,7 +267,8 @@ def fetch_pr_review_data(
     repo_name: Optional[str] = None,
     auth_memory_tool: Optional[AuthMemoryTool] = None,
     user_id: str = "user1",
-    pr_number: Optional[int] = None
+    pr_number: Optional[int] = None,
+    state: str = "all"
 ) -> Dict[str, Any]:
     """
     Fetch PR review time data from GitHub API.
@@ -279,6 +282,7 @@ def fetch_pr_review_data(
         auth_memory_tool: AuthMemoryTool instance for persistent storage
         user_id: User identifier (default: "user1")
         pr_number: Optional specific PR number. If not provided, fetches multiple PRs.
+        state: PR state filter - "open", "closed", or "all" (default: "all")
     
     Returns:
         Dictionary with status and review time data
@@ -360,7 +364,7 @@ def fetch_pr_review_data(
             # Fetch multiple PRs with review data
             prs_url = f"https://api.github.com/repos/{repo_name}/pulls"
             params = {
-                "state": "closed",
+                "state": state,
                 "per_page": 20,
                 "sort": "updated",
                 "direction": "desc"
