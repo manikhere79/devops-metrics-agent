@@ -79,17 +79,17 @@ def create_root_agent(auth_memory_tool: AuthMemoryTool) -> LlmAgent:
         """Wrapper for get_tracked_repos tool."""
         return get_tracked_repos(tool_context, auth_memory_tool, user_id)
     
-    def fetch_pr_data_wrapper(tool_context, repo_name: str, user_id: str = DEFAULT_USER_ID, per_page: int = 10):
+    def fetch_pr_data_wrapper(tool_context, repo_name: str, user_id: str = DEFAULT_USER_ID, per_page: int = 10, state: str = "all"):
         """Wrapper for fetch_pr_data tool."""
-        return fetch_pr_data(tool_context, repo_name, auth_memory_tool, user_id, per_page)
+        return fetch_pr_data(tool_context, repo_name, auth_memory_tool, user_id, per_page, state)
     
     def fetch_cycle_time_data_wrapper(tool_context, repo_name: Optional[str] = None, user_id: str = DEFAULT_USER_ID):
         """Wrapper for fetch_cycle_time_data tool."""
         return fetch_cycle_time_data(tool_context, repo_name, auth_memory_tool, user_id)
     
-    def fetch_pr_review_data_wrapper(tool_context, repo_name: Optional[str] = None, user_id: str = DEFAULT_USER_ID, pr_number: Optional[int] = None):
+    def fetch_pr_review_data_wrapper(tool_context, repo_name: Optional[str] = None, user_id: str = DEFAULT_USER_ID, pr_number: Optional[int] = None, state: str = "all"):
         """Wrapper for fetch_pr_review_data tool."""
-        return fetch_pr_review_data(tool_context, repo_name, auth_memory_tool, user_id, pr_number)
+        return fetch_pr_review_data(tool_context, repo_name, auth_memory_tool, user_id, pr_number, state)
     
     # Create root agent with all tools
     root_agent = LlmAgent(
