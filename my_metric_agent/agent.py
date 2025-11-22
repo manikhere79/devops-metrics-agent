@@ -13,9 +13,19 @@ from typing import Optional
 from google.adk.agents import LlmAgent
 from google.adk.models.google_llm import Gemini
 from google.adk.tools import AgentTool
+from google.adk.apps.app import App, EventsCompactionConfig
+from google.adk.runners import Runner
+from google.adk.sessions import DatabaseSessionService
 from google.genai import types
 
-from my_metric_agent.config import get_model_name, DEFAULT_USER_ID
+from my_metric_agent.config import (
+    get_model_name, 
+    DEFAULT_USER_ID,
+    COMPACTION_INTERVAL,
+    COMPACTION_OVERLAP_SIZE,
+    DB_URL,
+    ensure_data_directory,
+)
 from my_metric_agent.tools.github_tools import (
     setup_github_config,
     add_tracked_repo,
@@ -153,8 +163,75 @@ def create_root_agent(auth_memory_tool: AuthMemoryTool) -> LlmAgent:
     return root_agent
 
 
-# Create module-level root_agent for adk web command
-# This is required because adk web expects 'my_metric_agent.agent.root_agent' to exist
+# Create module-level agent for internal use
+logger.info("Initializing module-level agent for adk web")
+
+# Ensure data directory exists
+ensure_data_directory()
+
 # Initialize AuthMemoryTool and create the root agent at module import time
 _auth_memory_tool = AuthMemoryTool()
-root_agent = create_root_agent(_auth_memory_tool)
+_root_agent = create_root_agent(_auth_memory_tool)
+
+# Export root_agent for adk web (it requires this)
+# adk web will wrap this and create a runner, but we also export our own runner below
+root_agent = _root_agent
+
+# Create App with EventsCompactionConfig for session management
+# Note: We create this internally but don't export it at module level
+# because exporting 'app' causes adk web to ignore our 'runner' export
+_app = App(
+    name="my_metric_agent",
+    root_agent=_root_agent,
+    events_compaction_config=EventsCompactionConfig(
+        compaction_interval=COMPACTION_INTERVAL,  # Compact every N turns
+        overlap_size=COMPACTION_OVERLAP_SIZE,  # Keep N previous turns for context
+    ),
+)
+
+logger.info("Module-level app created with EventsCompactionConfig")
+
+
+def create_runner_with_persistent_sessions() -> Runner:
+    """
+    Create a runner with DatabaseSessionService for persistent sessions.
+    
+    This function creates the session service which will initialize lazily
+    when first used in an async context.
+    
+    Returns:
+        Runner with DatabaseSessionService
+    """
+    try:
+        logger.info(f"Creating DatabaseSessionService with: {DB_URL}")
+        
+        # Create DatabaseSessionService - it will initialize lazily on first async use
+        session_service = DatabaseSessionService(db_url=DB_URL)
+        
+        # Create runner with persistent sessions
+        runner = Runner(
+            app=_app,
+            session_service=session_service,
+        )
+        
+        logger.info("Runner created with DatabaseSessionService for persistent sessions")
+        return runner
+        
+    except Exception as e:
+        logger.error(f"Failed to create runner with DatabaseSessionService: {e}", exc_info=True)
+        logger.warning("Falling back to runner without explicit session service")
+        # Fallback to default (InMemorySessionService)
+        return Runner(app=_app)
+
+
+# Create and export runner with DatabaseSessionService
+# NOTE: adk web command does NOT use this runner export when root_agent is present.
+# To use persistent sessions with adk web, run:
+#   adk web . --session_service_uri=sqlite:///path/to/sessions.db
+# Or use the helper script: .\scripts\start_adk_web.ps1
+#
+# This runner export is useful for:
+#   1. Custom deployments that import the runner directly
+#   2. Testing session persistence programmatically
+#   3. Alternative entry points that don't use adk web
+runner = create_runner_with_persistent_sessions()

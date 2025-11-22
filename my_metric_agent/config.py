@@ -19,15 +19,18 @@ DATA_DIR.mkdir(exist_ok=True)
 # Database paths
 SESSIONS_DB_PATH = str(DATA_DIR / "sessions.db")
 METRICS_DB_PATH = str(DATA_DIR / "metrics_db.sqlite")
-# Use aiosqlite for async SQLite support (required by DatabaseSessionService)
-DB_URL = f"sqlite+aiosqlite:///{SESSIONS_DB_PATH}"
+
+# Database URL for DatabaseSessionService
+# Using sqlite:/// (sync) instead of sqlite+aiosqlite:/// to avoid async initialization issues
+# The ADK will handle async operations internally
+DB_URL = f"sqlite:///{SESSIONS_DB_PATH}"
 
 # Default user configuration
 DEFAULT_USER_ID = "user1"
 
 # Context compaction configuration
-COMPACTION_INTERVAL = 5  # Compact every 5 turns
-COMPACTION_OVERLAP_SIZE = 2  # Keep 2 previous turns for context
+COMPACTION_INTERVAL = 2  # Compact every 2 turns
+COMPACTION_OVERLAP_SIZE = 1  # Keep 1 previous turn for context
 
 # Model configuration
 DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
